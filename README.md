@@ -15,6 +15,8 @@ Infine questi dati sono stati utilizzati per mappare il centro di ogni stato (ch
 Per visualizzare direttamente il progetto senza scaricare alcun file in locale, si può visitare questo link: https://rawgit.com/luca04/infovis_secondoProgetto/master/usa_flights_visualization.html
 
 
-Valentina Accadia 
+Valentina Accadia
+
 Luca Mancini
+
 Ana Lucia Quispe Pumacayo
