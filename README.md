@@ -11,6 +11,8 @@ Questo dataset è stato usato effettuando delle query con Hive su Hadoop per est
 
 Per visualizzare la mappa degli Stati Uniti è stato usato questo file: https://gist.githubusercontent.com/mbostock/4090846/raw/us.json
 
+Per rappresentare l'insieme di aereoporti per ogni stato è stato realizzato questo file: https://gist.githubusercontent.com/vale25/67d58596ca4ac06513b1f8a7fb2e15f3/raw/63be35b50801e9be6b35aa10ce0fc0e61567cb4a/centers.csv 
+
 Infine questi dati sono stati utilizzati per mappare il centro di ogni stato (che raggruppa l'insieme degli aeroporti dello stato) e collegare i vari punti con delle curve che rappresentano i voli.
 
 Per visualizzare direttamente il progetto senza scaricare alcun file in locale, si può visitare questo link: https://rawgit.com/luca04/infovis_secondoProgetto/master/usa_flights_visualization.html
