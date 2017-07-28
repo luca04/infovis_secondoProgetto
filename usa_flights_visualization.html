@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+body {
+  background-color: #85a3e0;;
+ 
+}
+
+button:focus {
+  color: #E28400;
+}
+
+.active{
+  color: #E28400;
+}
+
+button:hover {
+    color: #E28400;
+    cursor: pointer;
+}
+
+.land {
+  fill: #dddddd;
+}
+
+.border {
+  fill: none;
+  stroke-width: 1px;
+}
+
+.interior {
+  stroke: white;
+}
+
+.exterior {
+  stroke: #bbbbbb;
+}
+
+/* shadow trick from bl.ocks.org */
+#tooltip {
+  font-size: 10pt;
+  font-weight: 900;
+  fill: white;
+  text-shadow: 1px 1px 0 #252525, 1px -1px 0 #252525, -1px 1px 0 #252525, -1px -1px 0 #252525;
+}
+
+#tooltip2 {
+  font-size: 10pt;
+  font-weight: 900;
+  fill: white;
+  text-shadow: 1px 1px 0 #252525, 1px -1px 0 #252525, -1px 1px 0 #252525, -1px -1px 0 #252525;
+}
+
+
+</style>
+<b align="center" style="font-size:250%;position:absolute;left:340px;font-family:arial;">U.S.A. FLIGHTS VISUALIZATION</b>
+<svg width="950" height="450" style="display:block;margin:0 auto;position:relative;top:70px;"></svg>
+<script src="https://d3js.org/d3.v4.min.js"></script>
+<script src="https://d3js.org/topojson.v1.min.js"></script>
+<script src="https://d3js.org/d3.v4.min.js"></script>
+<script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+<script src="tooltip.js"></script>
+
+<img src="images/colormap.png" style="width:40px;height:500px;left:30px;position:absolute;top:60px;">
+<img src="images/arrow-up.png" style="width:40px;height:50px;left:70px;position:absolute;top:100px;">
+<img src="images/arrow-down.png" style="width:40px;height:50px;left:70px;position:absolute;top:470px;">
+<img src="images/minore.png" style="width:140px;height:23px;left:70px;position:absolute;top:65px;">
+<img src="images/maggiore.png" style="width:140px;height:23px;left:70px;position:absolute;top:535px;">
+
+
+<div class="buttons" style="width: 1275px; position: relative; top:90px; text-align: center;">
+  <button id="a" onclick="myFunction(this)" style="width:62px;">1998</button>
+  <button id="b" onclick="myFunction(this)" style="width:62px;">1999</button>
+  <button id="c" onclick="myFunction(this)" style="width:62px;">2000</button>
+  <button id="d" onclick="myFunction(this)" style="width:62px;">2001</button>
+  <button id="e" onclick="myFunction(this)" style="width:62px;">2002</button>
+  <button id="f" onclick="myFunction(this)" style="width:62px;">2003</button>
+  <button id="g" onclick="myFunction(this)" style="width:62px;">2004</button>
+  <button id="h" onclick="myFunction(this)" style="width:62px;">2005</button>
+  <button id="i" onclick="myFunction(this)" style="width:62px;">2006</button>
+  <button id="l" onclick="myFunction(this)" style="width:62px;">2007</button>
+  <button id="m" onclick="myFunction(this)" style="width:62px;">2008</button>
+</div>
+
+<script>
+
+
+//mantiene attivo il bottone selezionato
+function myFunction(elem){
+  var button = document.getElementsByClassName('active');
+  for (i=0; i<button.length; i++){
+    button[i].className = "";
+  }
+  elem.className += "active";
+}
+
+
+// links mappa, dataset voli, datatset aereoporti
+var urls = {
+  centers: "https://gist.githubusercontent.com/vale25/67d58596ca4ac06513b1f8a7fb2e15f3/raw/63be35b50801e9be6b35aa10ce0fc0e61567cb4a/centers.csv",
+  fly4state: "https://gist.githubusercontent.com/vale25/0b0b1baad41d671c9ac77103046f2b7b/raw/6ea629ee8e00dc37f798dbe78039482b546479e5/1998.csv",
+  usa: "https://gist.githubusercontent.com/mbostock/4090846/raw/us.json"
+};
+  
+var urls2 = {
+  fly4state: "https://gist.githubusercontent.com/AnaQuispe/69fae507771f1c04dc9f9ce42289bb09/raw/96e4b798c2218434dbb0a386d981cbd76ab316ff/1999.csv"
+};
+
+var urls3 = {
+  fly4state: "https://gist.githubusercontent.com/AnaQuispe/370433c5cd5ea81eb0705c9754071022/raw/359a8aba876636b82e1fd6fa4e89aa726ef9a8ff/2000.csv"
+};
+
+var urls4 = {
+  fly4state: "https://gist.githubusercontent.com/AnaQuispe/f5cd047af888f24887b78c5743fd375f/raw/190b4b83436b5f6de85297ea187341a5654b84c3/2001.csv"
+};
+
+var urls5 = {
+  fly4state: "https://gist.githubusercontent.com/AnaQuispe/3bf537585b46587a79a935c099b090b4/raw/58590c758c58184c726c47d94aee39bdd20b6e43/2002.csv"
+};
+
+var urls6 = {
+  fly4state: "https://gist.githubusercontent.com/AnaQuispe/1300ce88e0e4b5e581f3522a2facfeab/raw/f3c2cbba283b636611a182221e00f7bc1b75264e/2003.csv"
+};
+
+var urls7 = {
+  fly4state: "https://gist.githubusercontent.com/AnaQuispe/db63b05cd16c3cb6a3f25d06387dd286/raw/e6ab0d4525d648763a17a095733286e8be3011fc/2004.csv"
+};
+
+var urls8 = {
+  fly4state: "https://gist.githubusercontent.com/AnaQuispe/48352bd206d5b52975d89b62f46d6bfe/raw/8420593c997c8b74bce9aada1aad5acedbc12f16/2005.csv"
+};
+
+var urls9 = {
+  fly4state: "https://gist.githubusercontent.com/AnaQuispe/dff3f89acf95c616f841f9d7feb0e21b/raw/8c638f399e52f824b5bda315959be2f74db44d8f/2006.csv"
+};
+
+var urls10 = {
+  fly4state: "https://gist.githubusercontent.com/AnaQuispe/2adc69654c54abcc140896e185f44fca/raw/8a07460106eb5879a1a6704994a2c7c339fcd0ab/2007.csv"
+};
+
+var urls11 = {
+  fly4state: "https://gist.githubusercontent.com/AnaQuispe/fbbf84bc7d07cdd65aeb0803e6b4aa74/raw/73160b5c1fdca3bfcfb8694f25f5686910c9b2c6/2008.csv"
+};
+
+var svg = d3.select("svg");
+
+var plot2 = svg.append("g").attr("id", "plot2");
+
+var plot = svg.append("g").attr("id", "plot");
+
+var width  = +svg.attr("width");
+var height = +svg.attr("height");
+ 
+var radius = {min: 6, max: 12};
+
+var states = null;
+
+// Focus sugli Stati Uniti continentali
+// https://github.com/d3/d3-geo#geoAlbers
+var projection = d3.geoAlbers();
+
+// creazione mappa U.S.A., gli aereoporti ed il path dei voli
+d3.json(urls.usa, drawMap);
+
+/*
+ * Funzione per creare la mappa degli Stati Uniti
+ */
+function drawMap(error, map) {
+
+  var isContinental = function(d) {
+    var id = +d.id;
+    return id < 60 && id !== 2 && id !== 15;
+  };
+
+  var old = map.objects.states.geometries.length;
+  map.objects.states.geometries = map.objects.states.geometries.filter(isContinental);
+
+  states = topojson.feature(map, map.objects.states);
+
+  projection.fitSize([width, height], states);
+
+  var classe = document.getElementById('plot').className.baseVal;
+
+  //definisce la basemap una sola volta
+  if (classe == "") {
+  var base = plot2.append("g").attr("id", "basemap");
+  var path = d3.geoPath(projection);
+
+  // disegna gli stati separatamente
+  base.append("g")
+    .attr("class", "states")
+    .selectAll("path")
+    .data(states.features)
+    .enter()
+    .append("path")
+    .attr("d", path)
+    .attr("id", function(d) {
+      return "name"+d.id;
+    })
+    .style("stroke", "#fff")
+    .style("stroke-width", "1")
+    .style("fill", function(d) {
+      return d3.interpolateOranges(0.5);
+    });
+  }
+
+  //carica il dataset dei voli in base all'anno
+  if (classe == "1998"){
+  
+  d3.queue()
+    .defer(d3.csv, urls.centers, typeCenters)
+    .defer(d3.csv, urls.fly4state, typeFlights)
+    .await(filterData);
+
+  }
+  if (classe == "1999"){
+    d3.queue()
+    .defer(d3.csv, urls.centers, typeCenters)
+    .defer(d3.csv, urls2.fly4state, typeFlights)
+    .await(filterData);
+  }
+  if (classe == "2000"){
+    d3.queue()
+    .defer(d3.csv, urls.centers, typeCenters)
+    .defer(d3.csv, urls3.fly4state, typeFlights)
+    .await(filterData);
+  }
+  if (classe == "2001"){
+    d3.queue()
+    .defer(d3.csv, urls.centers, typeCenters)
+    .defer(d3.csv, urls4.fly4state, typeFlights)
+    .await(filterData);
+  }
+  if (classe == "2002"){
+    d3.queue()
+    .defer(d3.csv, urls.centers, typeCenters)
+    .defer(d3.csv, urls5.fly4state, typeFlights)
+    .await(filterData);
+  }
+  if (classe == "2003"){
+    d3.queue()
+    .defer(d3.csv, urls.centers, typeCenters)
+    .defer(d3.csv, urls6.fly4state, typeFlights)
+    .await(filterData);
+  }
+  if (classe == "2004"){
+    d3.queue()
+    .defer(d3.csv, urls.centers, typeCenters)
+    .defer(d3.csv, urls7.fly4state, typeFlights)
+    .await(filterData);
+  }
+  if (classe == "2005"){
+    d3.queue()
+    .defer(d3.csv, urls.centers, typeCenters)
+    .defer(d3.csv, urls8.fly4state, typeFlights)
+    .await(filterData);
+  }
+  if (classe == "2006"){
+    d3.queue()
+    .defer(d3.csv, urls.centers, typeCenters)
+    .defer(d3.csv, urls9.fly4state, typeFlights)
+    .await(filterData);
+  }
+  if (classe == "2007"){
+    d3.queue()
+    .defer(d3.csv, urls.centers, typeCenters)
+    .defer(d3.csv, urls10.fly4state, typeFlights)
+    .await(filterData);
+  }
+  if (classe == "2008"){
+    d3.queue()
+    .defer(d3.csv, urls.centers, typeCenters)
+    .defer(d3.csv, urls11.fly4state, typeFlights)
+    .await(filterData);
+  }
+}
+
+
+// nuove funzioni per i due nuovi dataset
+function typeCenters(d) {
+  d.longitude = +d.longitude;
+  d.latitude = +d.latitude;
+  d.degree = 0;
+  return d;
+}
+
+function typeFlights(d) {
+  d.count = +d.count;
+  return d;
+}
+
+
+function filterData(error, centers, flights4state) {
+  if(error) throw error;
+
+  centers = centers.filter(function(d) {
+    if (d.state != "AK" && d.state != "HI")
+      return d;
+  });
+
+  var bystate = d3.map(centers, function(d) {
+    return d.state;
+  });
+
+  // elimina i voli con stati di arrivo e/o partenza errati o non conformi al file centers.csv
+  flights4state = flights4state.filter(function(d) {
+    return bystate.get(d.origin) && bystate.get(d.destination);
+  });
+
+  // elimina i voli tra stati non continentali
+  flights4state = flights4state.filter(function(d) {
+    return d3.geoContains(states, [bystate.get(d.origin).longitude, bystate.get(d.origin).latitude]) &&
+            d3.geoContains(states, [bystate.get(d.destination).longitude, bystate.get(d.destination).latitude]);
+  });
+
+
+  flights4state.forEach(function(d) {
+    d.source = bystate.get(d.origin);
+    d.target = bystate.get(d.destination);
+
+    d.source.degree = d.source.degree + 1;
+    d.target.degree = d.target.degree + 1;
+  });
+
+  centers.forEach(function(d) {
+    d.total = 0;
+  })
+
+
+  // calcola per ogni stato la differenza tra voli in entrata e voli in uscita
+  flights4state.forEach(function(d) {
+    var tot = d.count;
+    centers.forEach(function(e) {
+      if (e.state == d.origin)
+        e.total -= tot;
+      if (e.state == d.destination) 
+        e.total += tot;
+    })
+  }); 
+
+  centers.forEach(function(d) {
+    console.log(d.state+" "+d.total)
+  })
+
+  // calcola le coordinate x,y in pixels
+  centers.forEach(function(d) {
+    var coords = projection([d.longitude, d.latitude]);
+    d.x = coords[0];
+    d.y = coords[1];
+  });
+
+  // calcola la minima e la massima differenza di voli in totale e crea il colore adatto
+  var arr = centers.map(function(d) {
+    return d.total;
+  })
+
+  var max = Math.max.apply(null, arr);
+  var min = Math.min.apply(null, arr);
+
+  function createColor(num){
+    var col = (num-min)/(max-min);
+    return d3.interpolateOranges(col);
+
+  };
+  
+  // seleziona ogni stato e gli attribuisce il colore adeguato
+  var i = 0;
+  states.features.forEach(function(d) {
+    var idd = d.id;
+    var difference = centers[i].total;
+    var color = createColor(difference);
+    d3.select("#name"+idd)
+    .style("stroke", "#fff")
+    .style("stroke-width", "1")
+    .transition()
+    .duration(2000)
+    .style("fill", color);
+    i++;
+  })
+  
+  // inizia a disegnare tutto
+  drawSinglePoint(centers, flights4state);
+}
+
+function drawSinglePoint(centers, flights) {
+
+  var bundle = generateSegments(centers, flights);
+  var line = d3.line()
+     .curve(d3.curveBundle) // curveBundle
+    .x(function(d) { return d.x; })
+    .y(function(d) { return d.y; });
+
+  var i = 0;
+  var j = 0;
+  var provaa;
+  var prova2;
+  var links = plot.append("g").attr("id", "flights")
+    .selectAll("path.flight")
+    .data(bundle.paths)
+    .enter()
+    .append("path")
+    .attr("d", line)
+    .attr("origin",function(d){
+      provaa = bundle.paths[i][0].state;
+      i++;
+      return provaa;
+    })
+    .attr("destination",function(d){
+      prova2 = bundle.paths[j].slice(-1)[0].state;
+      j++;
+      return prova2;
+    })
+    .style("fill", "none")
+    .style("stroke", "#252525")
+    .style("stroke-width", 0.5)
+    .style("stroke-opacity", 0.4);  // originale 0.2
+    // fa l'animazione dei path tra gli aeroporti
+  // https://github.com/d3/d3-force
+  var layout = d3.forceSimulation()
+    .alphaDecay(0.1)
+    .force("charge", d3.forceManyBody()
+      .strength(7) // originale: 10
+      .distanceMax(radius.max * 1.5) // originale: 2
+    )
+    .force("link", d3.forceLink()
+      .strength(0.8)
+      .distance(0)
+    )
+    .on("tick", function(d) {
+      links.attr("d", line);
+    })
+    .on("end", function(d) {
+      console.log("Layout complete!");
+    });
+
+    layout.nodes(bundle.nodes).force("link").links(bundle.links);
+
+  var scale = d3.scaleSqrt()
+    .domain(d3.extent(centers, function(d) { return d.degree; }))
+    .range([radius.min, radius.max]);
+
+    plot.append("g").attr("id", "centers")
+    .selectAll("circle.center")
+    .data(centers)
+    .enter()
+    .append("circle")
+    .attr("r", function(d) { return scale(d.degree); })
+    .attr("cx", function(d) { return d.x; })
+    .attr("cy", function(d) { return d.y; })
+    .attr("total", d.total)
+    .attr("name", d.name)
+    .style("fill", "white")
+    .style("opacity", 0.6)
+    .style("stroke", "#252525")
+    .on("mouseover", onMouseOver)
+    .on("mousemove", onMouseMove)
+    .on("mouseout", onMouseOut);
+}
+
+function generateSegments(nodes, links) {
+  // calculate distance between two nodes
+  var distance = function(source, target) {
+    // sqrt( (x2 - x1)^2 + (y2 - y1)^2 )
+    var dx2 = Math.pow(target.x - source.x, 2);
+    var dy2 = Math.pow(target.y - source.y, 2);
+
+    return Math.sqrt(dx2 + dy2);
+  };
+
+  var hypotenuse = Math.sqrt(width * width + height * height);
+
+  var inner = d3.scaleLinear()
+    .domain([0, hypotenuse])
+    .range([1, 15]);
+
+  var bundle = {nodes: [], links: [], paths: []};
+
+  bundle.nodes = nodes.map(function(d, i) {
+    d.fx = d.x;
+    d.fy = d.y;
+    return d;
+  });
+
+  links.forEach(function(d, i) {
+    // calcola la distanza tra source e target
+    var length = distance(d.source, d.target);
+    var total = Math.round(inner(length));
+
+    var xscale = d3.scaleLinear()
+      .domain([0, total + 1]) // source, inner nodes, target
+      .range([d.source.x, d.target.x]);
+
+    var yscale = d3.scaleLinear()
+      .domain([0, total + 1])
+      .range([d.source.y, d.target.y]);
+
+    // inizializza il nodo source
+    var source = d.source;
+    var target = null;
+    var local = [source];
+
+    for (var j = 1; j <= total; j++) {
+      // calcola il nodo target
+      target = {
+        x: xscale(j),
+        y: yscale(j)
+      };
+
+      local.push(target);
+      bundle.nodes.push(target);
+
+      bundle.links.push({
+        source: source,
+        target: target
+      });
+
+      source = target;
+    }
+
+    local.push(d.target);
+
+    bundle.links.push({
+      source: target,
+      target: d.target
+    });
+
+    bundle.paths.push(local);
+  });
+
+  return bundle;
+}
+
+//Aggiungi classe in riferimento all'anno al bottone cliccato per caricare successivamente il dataset specifico
+d3.select("button#a")
+  .on("click", function() {
+    document.getElementById('plot').innerHTML = "";
+    document.getElementById("plot").setAttribute("class","1998");
+    d3.json(urls.usa, drawMap);
+  })
+d3.select("button#b")
+  .on("click", function() {
+    document.getElementById('plot').innerHTML = "";
+    document.getElementById("plot").setAttribute("class","1999");
+    d3.json(urls.usa, drawMap);
+  })
+d3.select("button#c")
+  .on("click", function() {
+    document.getElementById('plot').innerHTML = "";
+    document.getElementById("plot").setAttribute("class","2000");
+    d3.json(urls.usa, drawMap);
+  })
+  d3.select("button#d")
+  .on("click", function() {
+    document.getElementById('plot').innerHTML = "";
+    document.getElementById("plot").setAttribute("class","2001");
+    d3.json(urls.usa, drawMap);
+  })
+  d3.select("button#e")
+  .on("click", function() {
+    document.getElementById('plot').innerHTML = "";
+    document.getElementById("plot").setAttribute("class","2002");
+    d3.json(urls.usa, drawMap);
+  })
+  d3.select("button#f")
+  .on("click", function() {
+    document.getElementById('plot').innerHTML = "";
+    document.getElementById("plot").setAttribute("class","2003");
+    d3.json(urls.usa, drawMap);
+  })
+  d3.select("button#g")
+  .on("click", function() {
+    document.getElementById('plot').innerHTML = "";
+    document.getElementById("plot").setAttribute("class","2004");
+    d3.json(urls.usa, drawMap);
+  })
+  d3.select("button#h")
+  .on("click", function() {
+    document.getElementById('plot').innerHTML = "";
+    document.getElementById("plot").setAttribute("class","2005");
+    d3.json(urls.usa, drawMap);
+  })
+  d3.select("button#i")
+  .on("click", function() {
+    document.getElementById('plot').innerHTML = "";
+    document.getElementById("plot").setAttribute("class","2006");
+    d3.json(urls.usa, drawMap);
+  })
+  d3.select("button#l")
+  .on("click", function() {
+    document.getElementById('plot').innerHTML = "";
+    document.getElementById("plot").setAttribute("class","2007");
+    d3.json(urls.usa, drawMap);
+  })
+  d3.select("button#m")
+  .on("click", function() {
+    document.getElementById('plot').innerHTML = "";
+    document.getElementById("plot").setAttribute("class","2008");
+    d3.json(urls.usa, drawMap);
+  })
+
+
+</script>
